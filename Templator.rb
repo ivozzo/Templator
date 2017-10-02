@@ -1,13 +1,11 @@
 require 'optparse'
-require 'net/http'
-require 'uri'
-require 'nokogiri'
+require 'mediawiki_api'
 
 def load_library(pth)
     require File.join(File.expand_path(File.dirname(__FILE__)), pth)
 end
 
-load_library('Lib/Tokenizer.rb')
+load_library('Lib/Mediawiki.rb')
 
 Options = Struct.new(:help, :mediawiki, :login, :password)
 
@@ -59,8 +57,24 @@ end
 def main(argv)
     options = parse_args(argv)
 
-    token = Tokenizer.queryEditToken(options)
-    
+    mediawikiClient = Mediawiki.getClient(options.mediawiki)
+    Mediawiki.login(mediawikiClient, options.login, options.password)
+
+    templateList = Dir["Templates/**"]
+
+    templateList.each do |template|
+        content = ""
+        templateFile = File.open(template, "r")
+        templateFile.each_line do |line|
+            content << line
+        end
+        templateFile.close
+
+        template.sub! "Templates/", ""
+        template.sub! ".txt", ""
+        Mediawiki.editPage(mediawikiClient, template, content)
+    end
+
 end
   
 # Launch Templator
