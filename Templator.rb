@@ -60,8 +60,9 @@ def main(argv)
     mediawikiClient = Mediawiki.getClient(options.mediawiki)
     Mediawiki.login(mediawikiClient, options.login, options.password)
 
+    # Template creation
+    puts "Reading templates from Templates directory..."
     templateList = Dir["Templates/**"]
-
     templateList.each do |template|
         content = ""
         templateFile = File.open(template, "r")
@@ -69,10 +70,24 @@ def main(argv)
             content << line
         end
         templateFile.close
-
         template.sub! "Templates/", ""
         template.sub! ".txt", ""
         Mediawiki.editPage(mediawikiClient, template, content)
+    end
+
+    # Page creation
+    puts "Reading pages from Pages directory..."
+    pageList = Dir["Pages/**"]
+    pageList.each do |page|
+        content = ""
+        pageFile = File.open(page, "r")
+        pageFile.each_line do |line|
+            content << line
+        end
+        pageFile.close
+        page.sub! "Pages/", ""
+        page.sub! ".txt", ""
+        Mediawiki.editPage(mediawikiClient, page, content)
     end
 
 end
